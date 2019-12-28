@@ -20,7 +20,7 @@ Although there are already tons of existing [Java JSON libraries](https://gitlab
 ### Maven dependency
 
     <dependency>
-        <groupId>com.republicate.json</groupId>
+        <groupId>com.republicate</groupId>
         <artifactId>essential-json</artifactId>
         <version>1.0</version>
     </dependency>
