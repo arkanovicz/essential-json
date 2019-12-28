@@ -10,7 +10,7 @@ Although there are already tons of existing [Java JSON libraries](https://gitlab
   + easily pluggable in other projects: one single source file
 
 + be **performant**
-+ avoid any kind of abstraction than **Serializable** around values, without any wrapping
++ avoid any kind of abstraction other than **Serializable** around values, without any wrapping
 + use a common **parent Serializable interface** for JSON objects and arrays
 
 ## Usage
