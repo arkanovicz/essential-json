@@ -79,9 +79,6 @@ under the License.
                         </goals>
                         <configuration>
                             <rules>
-                                <enforceBytecodeVersion>
-                                    <maxJdkVersion>${maven.compiler.target}</maxJdkVersion>
-                                </enforceBytecodeVersion>
                                 <requireJavaVersion>
                                     <version>[1.8,)</version>
                                 </requireJavaVersion>
