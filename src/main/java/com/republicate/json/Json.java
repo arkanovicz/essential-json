@@ -31,13 +31,13 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * <p>JSON container interface.</p>
- * <p>The two inner classes <code>JsonArray</code> and <code>JsonObject</code> represent the two flavors of this container.</p>
+ * <p>The two inner classes <code>Array</code> and <code>Object</code> represent the two flavors of this container.</p>
  */
 
 public interface Json extends Serializable
@@ -56,6 +56,7 @@ public interface Json extends Serializable
      * Parse a JSON string into a JSON container
      * @param content JSON content
      * @return parsed json
+     * @throws IOException if parsing fails
      */
     static Json parse(String content) throws IOException
     {
@@ -64,8 +65,9 @@ public interface Json extends Serializable
 
     /**
      * Parse a JSON stream into a JSON container
-     * @param reader
+     * @param reader JSON content reader
      * @return parsed json
+     * @throws IOException if parsing fails
      */
     static Json parse(Reader reader) throws IOException
     {
@@ -73,37 +75,21 @@ public interface Json extends Serializable
     }
 
     /**
-     * Creates a new JSON array
-     * @return empty array
-     */
-    static JsonArray newJsonArray()
-    {
-        return new JsonArray();
-    }
-
-    /**
-     * Creates a new JSON object
-     * @return empty array
-     */
-    static JsonObject newJsonObject()
-    {
-        return new JsonObject();
-    }
-
-    /**
      * Parse a JSON stream into a JSON container or simple value
      * @param content JSON content
      * @return parsed json
+     * @throws IOException if parsing fails
      */
     static Serializable parseValue(String content) throws IOException
     {
-        return new Parser(content).parseValue();
+        return new Parser(content).parseValue(true);
     }
 
     /**
      * Parse a JSON stream into a JSON container
-     * @param reader
+     * @param reader JSON content reader
      * @return parsed json
+     * @throws IOException if parsing fails
      */
     static Serializable parseValue(Reader reader) throws IOException
     {
@@ -114,44 +100,46 @@ public interface Json extends Serializable
      * Check if the underlying container is a JSON array.
      * @return true if underlying container is an array, false otherwise
      */
-    boolean isJsonArray();
+    boolean isArray();
 
     /**
      * Check if the underlying container is an object.
      * @return true if underlying container is an object, false otherwise
      */
-    boolean isJsonObject();
+    boolean isObject();
 
     /**
      * Ensure that the underlying container is an array.
      * @throws IllegalStateException otherwise
      */
-    void ensureIsJsonArray();
+    void ensureIsArray();
 
     /**
      * Ensure that the underlying container is an object.
      * @throws IllegalStateException otherwise
      */
-    void ensureIsJsonObject();
+    void ensureIsObject();
 
     /**
-     * Get self as a JsonArray
-     * @throws IllegalStateException if container is not a JsonArray
+     * Get self as a Array
+     * @return self as a Jon.Array
+     * @throws IllegalStateException if container is not a Array
      */
-    default JsonArray asJsonArray()
+    default Json.Array asArray()
     {
-        ensureIsJsonArray();
-        return (JsonArray) this;
+        ensureIsArray();
+        return (Array) this;
     }
 
     /**
-     * Get self as a JsonArray
-     * @throws IllegalStateException if container is not a JsonObject
+     * Get self as a Array
+     * @return self as a Json.Object
+     * @throws IllegalStateException if container is not a Object
      */
-    default JsonObject asJsonObject()
+    default Json.Object asObject()
     {
-        ensureIsJsonObject();
-        return (JsonObject) this;
+        ensureIsObject();
+        return (Object) this;
     }
 
     /**
@@ -170,13 +158,16 @@ public interface Json extends Serializable
      * Writes a representation of this container to the specified writer.
      * @param writer target writer
      * @return input writer
+     * @throws IOException if serialization failes
      */
     Writer toString(Writer writer) throws IOException;
 
     /**
      * Writes a pretty representation of this container to the specified writer.
      * @param writer target writer
+     * @param indent current indentation
      * @return input writer
+     * @throws IOException if serialization failes
      */
     Writer toPrettyString(Writer writer, String indent) throws IOException;
 
@@ -200,7 +191,7 @@ public interface Json extends Serializable
     /**
      * Implements a JSON array
      */
-    class JsonArray extends ArrayList<Serializable> implements Json
+    class Array extends ArrayList<Serializable> implements Json
     {
         private static final long serialVersionUID = 1272604422260086506L;
 
@@ -210,7 +201,7 @@ public interface Json extends Serializable
          * @return true if underlying container is an array, false otherwise
          */
         @Override
-        public boolean isJsonArray()
+        public boolean isArray()
         {
             return true;
         }
@@ -221,7 +212,7 @@ public interface Json extends Serializable
          * @return true if underlying container is an object, false otherwise
          */
         @Override
-        public boolean isJsonObject()
+        public boolean isObject()
         {
             return false;
         }
@@ -231,7 +222,7 @@ public interface Json extends Serializable
          * @throws IllegalStateException otherwise
          */
         @Override
-        public void ensureIsJsonArray()
+        public void ensureIsArray()
         {
         }
 
@@ -240,7 +231,7 @@ public interface Json extends Serializable
          * @throws IllegalStateException otherwise
          */
         @Override
-        public void ensureIsJsonObject()
+        public void ensureIsObject()
         {
             throw new IllegalStateException("container must be a JSON object");
         }
@@ -327,16 +318,146 @@ public interface Json extends Serializable
             }
             catch (IOException ioe)
             {
-                logger.error("could not render JsonArray string", ioe);
+                logger.error("could not render Array string", ioe);
                 return null;
             }
+        }
+
+        /**
+         * Returns the element at the specified position as a String value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a String value
+         */
+        public String getString(int index)
+        {
+            return TypeUtils.toString(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Boolean value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Boolean value
+         */
+        public Boolean getBoolean(int index)
+        {
+            return TypeUtils.toBoolean(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Character value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Character value
+         */
+        public Character getChar(int index)
+        {
+            return TypeUtils.toChar(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Byte value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Byte value
+         */
+        public Byte getByte(int index)
+        {
+            return TypeUtils.toByte(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Short value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Short value
+         */
+        public Short getShort(int index)
+        {
+            return TypeUtils.toShort(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Integer value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Integer value
+         */
+        public Integer getInteger(int index)
+        {
+            return TypeUtils.toInteger(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Long value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Long value
+         */
+        public Long getLong(int index)
+        {
+            return TypeUtils.toLong(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a BigInteger value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a BigInteger value
+         */
+        public BigInteger getBigInteger(int index)
+        {
+            return TypeUtils.toBigInteger(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Float value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Float value
+         */
+        public Float getFloat(int index)
+        {
+            return TypeUtils.toFloat(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Double value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Double value
+         */
+        public Double getDouble(int index)
+        {
+            return TypeUtils.toDouble(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a BigDecimal value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a BigDecimal value
+         */
+        public BigDecimal getBigDecimal(int index)
+        {
+            return TypeUtils.toBigDecimal(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Date value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Date value
+         */
+        public Date getDate(int index)
+        {
+            return TypeUtils.toDate(get(index));
+        }
+
+        /**
+         * Returns the element at the specified position as a Calendar value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Calendar value
+         */
+        public Calendar getCalendar(int index)
+        {
+            return TypeUtils.toCalendar(get(index));
         }
     }
 
     /**
      * Implements a JSON object
      */
-    class JsonObject extends LinkedHashMap<String, Serializable> implements Json
+    class Object extends LinkedHashMap<String, Serializable> implements Json, Iterable<Map.Entry<String, Serializable>>
     {
         private static final long serialVersionUID = -8433114857911795160L;
 
@@ -346,7 +467,7 @@ public interface Json extends Serializable
          * @return true if underlying container is an array, false otherwise
          */
         @Override
-        public boolean isJsonArray()
+        public boolean isArray()
         {
             return false;
         }
@@ -357,7 +478,7 @@ public interface Json extends Serializable
          * @return true if underlying container is an object, false otherwise
          */
         @Override
-        public boolean isJsonObject()
+        public boolean isObject()
         {
             return true;
         }
@@ -367,7 +488,7 @@ public interface Json extends Serializable
          * @throws IllegalStateException otherwise
          */
         @Override
-        public void ensureIsJsonArray()
+        public void ensureIsArray()
         {
             throw new IllegalStateException("container must be a JSON array");
         }
@@ -377,7 +498,7 @@ public interface Json extends Serializable
          * @throws IllegalStateException otherwise
          */
         @Override
-        public void ensureIsJsonObject()
+        public void ensureIsObject()
         {
         }
 
@@ -471,12 +592,180 @@ public interface Json extends Serializable
             }
             catch (IOException ioe)
             {
-                logger.error("could not render JsonArray string", ioe);
+                logger.error("could not render Array string", ioe);
                 return null;
             }
         }
+
+        /**
+         * Returns an iterator over map entries. Equivalent to <code>entrySet().iterator()</code>.
+         *
+         * @return an Iterator.
+         */
+        @Override
+        public Iterator<Map.Entry<String, Serializable>> iterator()
+        {
+            return entrySet().iterator();
+        }
+
+        /**
+         * Performs the given action for each element of the {@code Iterable}
+         * until all elements have been processed or the action throws an
+         * exception.
+         * @param action The action to be performed for each element
+         */
+        @Override
+        public void forEach(Consumer<? super Map.Entry<String, Serializable>> action)
+        {
+            entrySet().stream().forEach(action);
+        }
+
+        /**
+         * Creates a {@link Spliterator} over the elements described by this
+         * {@code Iterable}.
+         * @return a {@code Spliterator} over the elements described by this
+         * {@code Iterable}.
+         */
+        @Override
+        public Spliterator<Map.Entry<String, Serializable>> spliterator()
+        {
+            return Spliterators.spliterator(entrySet(), Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
+        }
+
+        /**
+         * Returns the element under the specified key as a String value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a String value or null if the key doesn't exist
+         */
+        public String getString(String key)
+        {
+            return TypeUtils.toString(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Boolean value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Boolean value or null if the key doesn't exist
+         */
+        public Boolean getBoolean(String key)
+        {
+            return TypeUtils.toBoolean(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Character value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Character value or null if the key doesn't exist
+         */
+        public Character getChar(String key)
+        {
+            return TypeUtils.toChar(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Byte value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Byte value or null if the key doesn't exist
+         */
+        public Byte getByte(String key)
+        {
+            return TypeUtils.toByte(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Short value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Short value or null if the key doesn't exist
+         */
+        public Short getShort(String key)
+        {
+            return TypeUtils.toShort(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Integer value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Integer value or null if the key doesn't exist
+         */
+        public Integer getInteger(String key)
+        {
+            return TypeUtils.toInteger(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Long value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Long value or null if the key doesn't exist
+         */
+        public Long getLong(String key)
+        {
+            return TypeUtils.toLong(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a BigInteger value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a BigInteger value or null if the key doesn't exist
+         */
+        public BigInteger getBigInteger(String key)
+        {
+            return TypeUtils.toBigInteger(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Float value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Float value or null if the key doesn't exist
+         */
+        public Float getFloat(String key)
+        {
+            return TypeUtils.toFloat(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Double value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Double value or null if the key doesn't exist
+         */
+        public Double getDouble(String key)
+        {
+            return TypeUtils.toDouble(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a BigDecimal value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a BigDecimal value or null if the key doesn't exist
+         */
+        public BigDecimal getBigDecimal(String key)
+        {
+            return TypeUtils.toBigDecimal(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Date value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Date value or null if the key doesn't exist
+         */
+        public Date getDate(String key)
+        {
+            return TypeUtils.toDate(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Calendar value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Calendar value or null if the key doesn't exist
+         */
+        public Calendar getCalendar(String key)
+        {
+            return TypeUtils.toCalendar(get(key));
+        }
     }
 
+    /**
+     * The Serializer class gathers static methods for JSON containers serialization.
+     */
     class Serializer
     {
         private static final String[] ESCAPED_CHARS;
@@ -502,6 +791,7 @@ public interface Json extends Serializable
          * @param str input string
          * @param writer target writer
          * @return input writer
+         * @throws IOException if escaping fails
          */
         static public Writer escapeJson(String str, Writer writer) throws IOException
         {
@@ -551,6 +841,7 @@ public interface Json extends Serializable
          * Write a serializable element to an output writer
          * @param serializable input element
          * @param writer output writer
+         * @throws IOException if serialization fails
          */
         static protected void writeSerializable(Serializable serializable, Writer writer) throws IOException
         {
@@ -580,6 +871,9 @@ public interface Json extends Serializable
         }
     }
 
+    /**
+     * JSON parser.
+     */
     class Parser
     {
         private Reader reader;
@@ -598,7 +892,12 @@ public interface Json extends Serializable
 
         private Parser(Reader reader)
         {
-            if (1==1/*reader.markSupported()*/)
+            /*
+              We need a reader that has an internal buffer otherwise read() calls
+              are gonna become a performance bottleneck. The markSuported() method
+              is a good indicator.
+             */
+            if (reader.markSupported())
             {
                 this.reader = reader;
             }
@@ -697,9 +996,9 @@ public interface Json extends Serializable
             }
         }
 
-        private JsonArray parseArray() throws IOException
+        private Array parseArray() throws IOException
         {
-            JsonArray ret = new JsonArray();
+            Array ret = new Array();
             skipWhiteSpace();
             if (ch != ']')
             {
@@ -720,9 +1019,9 @@ public interface Json extends Serializable
             return ret;
         }
 
-        private JsonObject parseObject() throws IOException
+        private Object parseObject() throws IOException
         {
-            JsonObject ret = new JsonObject();
+            Object ret = new Object();
             skipWhiteSpace();
             if (ch != '}')
             {
@@ -1084,7 +1383,10 @@ public interface Json extends Serializable
         }
     }
 
-    class FastStringReader extends  Reader
+    /**
+     * Like a StringReader, but without any synchronization lock.
+     */
+    class FastStringReader extends Reader
     {
         String str;
         int len;
@@ -1102,6 +1404,12 @@ public interface Json extends Serializable
             throw new NotImplementedException();
         }
 
+        @Override
+        public boolean markSupported()
+        {
+            // That's an obvious lie. We don't. See Parser.Parser.parse(Reader) to see why.
+            return true;
+        }
 
         @Override
         public void close() throws IOException
@@ -1112,6 +1420,296 @@ public interface Json extends Serializable
         public int read()
         {
             return pos == len ? -1 : str.charAt(pos++);
+        }
+    }
+
+    /**
+     * Conversion helpers
+     */
+    class TypeUtils
+    {
+        private static String toString(java.lang.Object value)
+        {
+            return value == null ? null : value.toString();
+        }
+
+        private static Character toChar(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Character)
+            {
+                return (Character)value;
+            }
+            if (value instanceof Boolean)
+            {
+                return ((Boolean)value).booleanValue()
+                    ? 't'
+                    : 'f';
+            }
+            if (value instanceof String && ((String) value).length() == 1)
+            {
+                return ((String)value).charAt(0);
+            }
+            return null;
+        }
+
+        private static Boolean toBoolean(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Boolean)
+            {
+                return (Boolean)value;
+            }
+            if (value instanceof String)
+            {
+                String str = (String)value;
+                if ("true".equals(str))
+                {
+                    return true;
+                }
+                if ("false".equals(str))
+                {
+                    return false;
+                }
+                try
+                {
+                    value = Long.valueOf(str);
+                }
+                catch (NumberFormatException nfe)
+                {
+                    return false;
+                }
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).longValue() != 0l;
+            }
+            return false;
+        }
+
+        private static Byte toByte(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).byteValue();
+            }
+            if (value instanceof String)
+            {
+                try
+                {
+                    return Byte.valueOf((String)value);
+                }
+                catch (NumberFormatException nfe)
+                {
+                }
+            }
+            return null;
+        }
+
+
+        private static Short toShort(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).shortValue();
+            }
+            if (value instanceof String)
+            {
+                try
+                {
+                    return Short.valueOf((String)value);
+                }
+                catch (NumberFormatException nfe)
+                {
+                }
+            }
+            return null;
+        }
+
+        private static Integer toInteger(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).intValue();
+            }
+            if (value instanceof String)
+            {
+                try
+                {
+                    return Integer.valueOf((String)value);
+                }
+                catch (NumberFormatException nfe)
+                {
+                }
+            }
+            return null;
+        }
+
+        private static Long toLong(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).longValue();
+            }
+            if (value instanceof String)
+            {
+                try
+                {
+                    return Long.valueOf((String)value);
+                }
+                catch (NumberFormatException nfe)
+                {
+                }
+            }
+            return null;
+        }
+
+        private static BigInteger toBigInteger(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof BigInteger)
+            {
+                return ((BigInteger)value);
+            }
+            if (value instanceof Number)
+            {
+                return BigInteger.valueOf(((Number)value).longValue());
+            }
+            if (value instanceof String)
+            {
+                return new BigInteger((String) value);
+            }
+            return null;
+        }
+        
+        private static Float toFloat(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).floatValue();
+            }
+            if (value instanceof String)
+            {
+                try
+                {
+                    return Float.valueOf((String)value);
+                }
+                catch (NumberFormatException nfe)
+                {
+                }
+            }
+            return null;
+        }
+
+        private static Double toDouble(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof Number)
+            {
+                return ((Number)value).doubleValue();
+            }
+            if (value instanceof String)
+            {
+                try
+                {
+                    return Double.valueOf((String)value);
+                }
+                catch (NumberFormatException nfe)
+                {
+                }
+            }
+            return null;
+        }
+
+        private static BigDecimal toBigDecimal(java.lang.Object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            if (value instanceof BigDecimal)
+            {
+                return ((BigDecimal)value);
+            }
+            if (value instanceof Number)
+            {
+                return BigDecimal.valueOf(((Number)value).doubleValue());
+            }
+            if (value instanceof String)
+            {
+                return new BigDecimal((String) value);
+            }
+            return null;
+        }
+
+        private static Date toDate(java.lang.Object value)
+        {
+            if (value == null || value instanceof Date)
+            {
+                return (Date)value;
+            }
+            if (value instanceof Calendar)
+            {
+                return ((Calendar)value).getTime();
+            }
+            return null;
+        }
+
+        private static Calendar toCalendar(java.lang.Object value)
+        {
+            if (value == null || value instanceof Calendar)
+            {
+                return (Calendar)value;
+            }
+            if (value instanceof Date)
+            {
+                // CB TODO - use model locale
+                Calendar calendar = GregorianCalendar.getInstance();
+                calendar.setTime((Date)value);
+                return calendar;
+            }
+            return null;
+        }
+
+        private static byte[] toBytes(java.lang.Object value)
+        {
+            if (value == null || value instanceof byte[])
+            {
+                return (byte[])value;
+            }
+            return String.valueOf(value).getBytes(StandardCharsets.UTF_8);
         }
     }
 }
