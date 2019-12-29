@@ -196,6 +196,21 @@ public interface Json extends Serializable
         private static final long serialVersionUID = 1272604422260086506L;
 
         /**
+         * Builds an empty Json.Array.
+         */
+        public Array()
+        {
+        }
+
+        /**
+         * Builds a Json.Array with the content of an existing collection.
+         */
+        public Array(Collection<? extends Serializable> collection)
+        {
+            super(collection);
+        }
+
+        /**
          * Check if the underlying container is an array.
          *
          * @return true if underlying container is an array, false otherwise
@@ -452,6 +467,30 @@ public interface Json extends Serializable
         {
             return TypeUtils.toCalendar(get(index));
         }
+
+        /**
+         * Returns the element at the specified position as a Json.Array value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Json.Array value
+         * @throws ClassCastException if value is not a a Jon.Array.
+         */
+        public Json.Array getArray(int index)
+        {
+            Serializable value = get(index);
+            return (Json.Array)value;
+        }
+
+        /**
+         * Returns the element at the specified position as a Json.Object value. 
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Json.Object value
+         * @throws ClassCastException if value is not a a Jon.Object.
+         */
+        public Json.Object getObject(int index)
+        {
+            Serializable value = get(index);
+            return (Json.Object)value;
+        }
     }
 
     /**
@@ -460,6 +499,21 @@ public interface Json extends Serializable
     class Object extends LinkedHashMap<String, Serializable> implements Json, Iterable<Map.Entry<String, Serializable>>
     {
         private static final long serialVersionUID = -8433114857911795160L;
+
+        /**
+         * Builds an emepty Json.Object.
+         */
+        public Object()
+        {
+        }
+
+        /**
+         * Builds an object with the content of an existing Map
+         */
+        public Object(Map<? extends String, ? extends Serializable> map)
+        {
+            super(map);
+        }
 
         /**
          * Check if the underlying container is an array.
@@ -760,6 +814,30 @@ public interface Json extends Serializable
         public Calendar getCalendar(String key)
         {
             return TypeUtils.toCalendar(get(key));
+        }
+
+        /**
+         * Returns the element under the specified key as a Json.Array value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Json.Array value or null if the key doesn't exist
+         * @throws ClassCastException if value is not a a Jon.Array.
+         */
+        public Json.Array getArray(String key)
+        {
+            Serializable value = get(key);
+            return (Json.Array)value;
+        }
+
+        /**
+         * Returns the element under the specified key as a Json.Object value. 
+         * @param  key key of the element to return
+         * @return the element under the specified key as a Json.Object value or null if the key doesn't exist
+         * @throws ClassCastException if value is not a a Jon.Object.
+         */
+        public Json.Object getObject(String key)
+        {
+            Serializable value = get(key);
+            return (Json.Object)value;
         }
     }
 
