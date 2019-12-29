@@ -25,7 +25,7 @@ The `com.republicate.json.Json` interface extends `Serializable` and is implemen
 
 ### Inclusion in your project
 
-Maven:
+Using Maven:
 
     <dependency>
         <groupId>com.republicate</groupId>
@@ -33,8 +33,9 @@ Maven:
         <version>1.0</version>
     </dependency>
 
-Gradle:
-...
+Using Gradle:
+
+    implementation 'com.republicate:essential-json:1.0'
 
 ### Parsing json
 
