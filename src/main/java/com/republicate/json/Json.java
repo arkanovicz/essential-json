@@ -1413,7 +1413,7 @@ public interface Json extends Serializable
             }
             if (!decimal && fitsInLong && (negative || negValue != Long.MIN_VALUE) && (!negative || negValue != 0))
             {
-                number = Long.valueOf(-negValue);
+                number = Long.valueOf(negative ? negValue : -negValue);
             }
             else
             {
