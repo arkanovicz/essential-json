@@ -142,4 +142,15 @@ public class EssentialJsonTest extends BaseTestUnit
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    public void testEquals() throws Exception
+    {
+        Json.Object o1 = new Json.Object();
+        o1.put("foo", "bar");
+        o1.put("bar", 45.65);
+        o1.put("baz", new Json.Array(1l, 2l, 3l));
+        Json.Object o2 = Json.parse("{ \"foo\":\"bar\", \"bar\":45.65, \"baz\":[1,2,3] }").asObject();
+        assertEquals(o1, o2);
+    }
 }
