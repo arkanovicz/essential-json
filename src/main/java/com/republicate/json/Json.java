@@ -97,6 +97,17 @@ public interface Json extends Serializable
     }
 
     /**
+     * Commodity method to escape a JSON string
+     * @param str string to escape
+     * @return escaped string
+     */
+    static String escape(String str) throws IOException
+    {
+        return Serializer.escapeJson(str, new StringWriter()).toString();
+
+    }
+
+    /**
      * Check if the underlying container is a JSON array.
      * @return true if underlying container is an array, false otherwise
      */
@@ -201,6 +212,15 @@ public interface Json extends Serializable
         public Array()
         {
         }
+
+        /**
+         * Builds a Json.Array with specified items
+         */
+        public Array(Serializable... items)
+        {
+            this(Arrays.asList(items));
+        }
+
 
         /**
          * Builds a Json.Array with the content of an existing collection.
