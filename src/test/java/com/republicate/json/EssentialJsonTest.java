@@ -144,7 +144,7 @@ public class EssentialJsonTest extends BaseTestUnit
     }
 
     @Test
-    public void testEquals() throws Exception
+    public void testEqualsJson() throws Exception
     {
         Json.Object o1 = new Json.Object();
         o1.put("foo", "bar");
@@ -152,5 +152,14 @@ public class EssentialJsonTest extends BaseTestUnit
         o1.put("baz", new Json.Array(1l, 2l, 3l));
         Json.Object o2 = Json.parse("{ \"foo\":\"bar\", \"bar\":45.65, \"baz\":[1,2,3] }").asObject();
         assertEquals(o1, o2);
+    }
+
+    @Test
+    public void testEqualsString() throws Exception
+    {
+        String payload = "{\"access_token\":\"MWJkNjA5NjItYzhmOS00OTkwLWFhZmEtOGQ4OTEyZDk4ZmJh\",\"token_type\":\"Bearer\",\"expires_in\":1800,\"scope\":\"openid profile\",\"refresh_token\":\"YWVmOGJjZjYtMzhlYi00YmM3LTg1NzQtNWMzOTY0NmY1MGUz\",\"id_token\":\"eyJjaWQiOiJydHIiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJhcHAuZGV2LnJ0cmV4cGVyaWVuY2Uub3JnIiwiYXVkIjoiQ2hhbmNlIiwic3ViIjoiZjViN2I1MWMtNjM4Yi0xMWVhLWJjOTYtYTRiZjAxMWRkNDg0IiwibmFtZSI6InRhbGVudF9jbGF1ZGUiLCJlbWFpbCI6ImNsYXVkZTJAcmVuZWdhdC5uZXQiLCJnaXZlbl9uYW1lIjoiQ2xhdWRlIiwiZmFtaWx5X25hbWUiOiJCcmlzc29uIiwiaWF0IjoxNTg0MjQ5MjI0LCJleHAiOjE1ODQyNDkyMjZ9.e2pgWxKe_1ZaUr06QPre65zqyOBzTDez16G4OE-OFBP-Dry2UAFISCAdX85jqqw0EjzJy-X8I5Ho7jD5hD2qeXtlT3Ee3oI2GdekW_sNpC1AhzwItfcdHhh7fIddaViOtpQbe11V7PDS0bcJsAc99SsR_kFIOwQi9T_xPmXoQyMN3bkHB-Ydty3jLKSINx-o7Dg7sFLwCNe1xpIHV5OwuzxiVBYW9Y_QpngtXqpwlBSDrq38WR-Y2w1IYZi2hUva9V5f8nezWM5fmXYe3DdRCa608w-AchWDGm7o-E7YJtNnKms57D1hYFIFJCKRPZsoBpGT0cVLPAcR7zCa4btKDJfRB2_B-u-vIn7lpSbuHBYF-SIzcJ5DP-rt-x1ritRFXnpxwqehvOEggG_l0nWHy6Tbl5uN2lsNrxAsDyIlvfrjw6BQJzQxfXNmrfXATjaGhFLVwl-pzsQa0N4Ullkv_5IQ6HUepQXwT_s-4VZlBXidcCJ0ypLo9n4JAxL-juTpgRCu2TAK4sIEajvXTt0UckHFV11oUXKA2Jz_V3XmmKzv1inn6uvYvi0bxm7zhGIqWSXKsDF4wnL-IsZ6-Ck7sSE9cUo54sListdz2mv9yrsD8R3P1PRyNiUqpMFBQn4LYm9vTvcozhOk4IbnSI2XjixeKBfrDWXrnSMCnyEAB@4\"}";
+        Json.Object parsed = Json.parse(payload).asObject();
+        String toString = parsed.toString();
+        assertEquals(payload, toString);
     }
 }

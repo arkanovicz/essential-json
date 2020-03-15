@@ -30,12 +30,12 @@ Using Maven:
     <dependency>
         <groupId>com.republicate</groupId>
         <artifactId>essential-json</artifactId>
-        <version>1.0</version>
+        <version>2.3</version>
     </dependency>
 
 Using Gradle:
 
-    implementation 'com.republicate:essential-json:1.0'
+    implementation 'com.republicate:essential-json:2.3'
 
 ### Parsing json
 
@@ -48,9 +48,14 @@ you will call the `Json.parseValue(string_or_reader)` method to get a `Serializa
     ...
     Json container = Json.parse(string_or_reader);
     // container will be a JSON object or a JSON array
+    if (container.isObject())
+    {
+        Json.Object obj = container.asObject();
+        ...
+    }
 
     Serializable value = Json.parseValue(string_or_reader);
-    // value will either be a JSON container or a single value
+    // value will either be a JSON container or a single Serializable value
 
 ## Rendering json
 
@@ -75,13 +80,7 @@ Containers `toString()` and `toString(Writer)` methods will render JSON strings 
     arr.add(5);
     Json.Object obj = new Json.Object(some_existing_map);
     obj.put("foo", "bar");
-    obj.put("baz", arr);
-
-## Using json
-
-    import com.republicate.json.Json;
-    ...
-    
+    obj.put("baz", arr);    
 
 ### References
 

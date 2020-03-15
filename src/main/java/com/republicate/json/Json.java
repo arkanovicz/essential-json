@@ -1268,6 +1268,10 @@ public interface Json extends Serializable
                             throw error("lone low surrogate escape sequence unexpected");
                         }
                     }
+                    else if (ch == -1)
+                    {
+                        throw error("unterminated string");
+                    }
                     else if (ch < 0x20)
                     {
                         throw error("unescaped control character");
@@ -1279,10 +1283,6 @@ public interface Json extends Serializable
                 }
                 builder.append(buffer, 0, pos);
                 pos = 0;
-                if (next() == -1)
-                {
-                    throw error("unterminated string");
-                }
             }
         }
 
