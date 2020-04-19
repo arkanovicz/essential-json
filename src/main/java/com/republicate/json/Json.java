@@ -40,8 +40,15 @@ import java.util.function.Consumer;
  * <p>The two inner classes <code>Array</code> and <code>Object</code> represent the two flavors of this container.</p>
  */
 
-public interface Json extends Serializable
+public interface Json extends Serializable, Cloneable
 {
+
+/*****************************************************************
+ *
+ * Json static members and methods
+ *
+ *****************************************************************/
+
     /**
      * Logger
      */
@@ -51,6 +58,7 @@ public interface Json extends Serializable
      * Indentation
      */
     String INDENTATION = "  ";
+
 
     /**
      * Parse a JSON string into a JSON container
@@ -74,6 +82,24 @@ public interface Json extends Serializable
         return new Parser(reader).parse();
     }
 
+    /** creates a new Json.Object
+     *
+     * @return new Json.Object
+     */
+    static Json.Object newObject(Serializable... elements)
+    {
+        return new Json.Object(elements);
+    }
+
+    /** creates a new Json.Array
+     *
+     * @return new Json.Object
+     */
+    static Json.Array newArray(Serializable... elements)
+    {
+        return new Json.Array(elements);
+    }
+
     /**
      * Parse a JSON stream into a JSON container or simple value
      * @param content JSON content
@@ -86,7 +112,7 @@ public interface Json extends Serializable
     }
 
     /**
-     * Parse a JSON stream into a JSON container
+     * Parse a JSON stream into a JSON container or a simple value
      * @param reader JSON content reader
      * @return parsed json
      * @throws IOException if parsing fails
@@ -106,6 +132,12 @@ public interface Json extends Serializable
         return Serializer.escapeJson(str, new StringWriter()).toString();
 
     }
+
+/*****************************************************************
+ *
+ * Json container
+ *
+ *****************************************************************/
 
     /**
      * Check if the underlying container is a JSON array.
@@ -198,6 +230,18 @@ public interface Json extends Serializable
             return null;
         }
     }
+
+    /**
+     * deep-clone object
+     * @return deep-cloned object
+     */
+    java.lang.Object clone();
+
+/*****************************************************************
+ *
+ * Json.Array
+ *
+ *****************************************************************/
 
     /**
      * Implements a JSON array
@@ -334,7 +378,7 @@ public interface Json extends Serializable
                     Serializer.writeSerializable(value, writer);
                 }
             }
-            writer.write('\n');
+            if (!first) writer.write('\n');
             writer.write(indent);
             writer.write(']');
             return writer;
@@ -492,7 +536,7 @@ public interface Json extends Serializable
          * Returns the element at the specified position as a Json.Array value. 
          * @param  index index of the element to return
          * @return the element at the specified position as a Json.Array value
-         * @throws ClassCastException if value is not a a Jon.Array.
+         * @throws ClassCastException if value is not a a Json.Array.
          */
         public Json.Array getArray(int index)
         {
@@ -504,14 +548,72 @@ public interface Json extends Serializable
          * Returns the element at the specified position as a Json.Object value. 
          * @param  index index of the element to return
          * @return the element at the specified position as a Json.Object value
-         * @throws ClassCastException if value is not a a Jon.Object.
+         * @throws ClassCastException if value is not a a Json.Object.
          */
         public Json.Object getObject(int index)
         {
             Serializable value = get(index);
             return (Json.Object)value;
         }
+
+        /**
+         * Returns the element at the specified position as a Json container.
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Json.Object value
+         * @throws ClassCastException if value is not a a Json container.
+         */
+        public Json getJson(int index)
+        {
+            Serializable value = get(index);
+            return (Json)value;
+        }
+
+        /**
+         * Appender returning self
+         * @param elem element to add
+         * @return the array
+         */
+        public Json.Array push(Serializable elem)
+        {
+            add(elem);
+            return this;
+        }
+
+        /**
+         * Setter returning self (old value is lost)
+         * @param index index of new element
+         * @param elem element to set
+         * @return the array
+         */
+        public Json.Array put(int index, Serializable elem)
+        {
+            set(index, elem);
+            return this;
+        }
+
+        public java.lang.Object clone()
+        {
+            Json.Array clone = (Json.Array)super.clone();
+            for (int i = 0; i < clone.size(); ++i)
+            {
+                // we make the assumption that an object is either Json or immutable (so already there)
+                Serializable value = get(i);
+                if (value instanceof Json)
+                {
+                    value = (Serializable)((Json)value).clone();
+                    clone.put(i, value);
+                }
+            }
+            return clone;
+        }
+
     }
+
+/*****************************************************************
+ *
+ * Json.Array
+ *
+ *****************************************************************/
 
     /**
      * Implements a JSON object
@@ -533,6 +635,20 @@ public interface Json extends Serializable
         public Object(Map<? extends String, ? extends Serializable> map)
         {
             super(map);
+        }
+
+        public Object(Serializable... elements)
+        {
+            if ((elements.length % 2) != 0)
+            {
+                throw new IllegalArgumentException("even numbers of arguments expected");
+            }
+            for (int i = 0; i < elements.length; i += 2)
+            {
+                if (elements[i] == null || !(elements[i] instanceof String))
+                    throw new IllegalArgumentException("odd arguments must be strings");
+                put((String) elements[i], elements[i + 1]);
+            }
         }
 
         /**
@@ -859,7 +975,53 @@ public interface Json extends Serializable
             Serializable value = get(key);
             return (Json.Object)value;
         }
+
+        /**
+         * Returns the element under the specified key as a Json container.
+         * @param  index index of the element to return
+         * @return the element at the specified position as a Json.Object value
+         * @throws ClassCastException if value is not a a Json container.
+         */
+        public Json getJson(int index)
+        {
+            Serializable value = get(index);
+            return (Json)value;
+        }
+
+        /**
+         * Setter returning self (old value, if any, is lost)
+         * @param key of new element
+         * @param elem element to set
+         * @return the object
+         */
+        public Json.Object set(String key, Serializable elem)
+        {
+            put(key, elem);
+            return this;
+        }
+
+        public java.lang.Object clone()
+        {
+            Json.Object clone = (Json.Object)super.clone();
+            for (Map.Entry<String, Serializable> entry : entrySet())
+            {
+                Serializable value = entry.getValue();
+                if (value instanceof Json)
+                {
+                    value = (Serializable)((Json)value).clone();
+                    entry.setValue(value);
+                }
+            }
+            return clone;
+        }
+
     }
+
+/*****************************************************************
+ *
+ * Serializer
+ *
+     *****************************************************************/
 
     /**
      * The Serializer class gathers static methods for JSON containers serialization.
@@ -968,6 +1130,12 @@ public interface Json extends Serializable
             }
         }
     }
+
+/*****************************************************************
+ *
+ * Parser
+ *
+ *****************************************************************/
 
     /**
      * JSON parser.
@@ -1480,6 +1648,12 @@ public interface Json extends Serializable
             return len;
         }
     }
+
+/*****************************************************************
+ *
+ * Helpers
+ *
+ *****************************************************************/
 
     /**
      * Like a StringReader, but without any synchronization lock.
