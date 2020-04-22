@@ -30,7 +30,7 @@ Using Maven:
     <dependency>
         <groupId>com.republicate</groupId>
         <artifactId>essential-json</artifactId>
-        <version>2.3</version>
+        <version>2.5</version>
     </dependency>
 
 Using Gradle:
