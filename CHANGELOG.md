@@ -1,3 +1,6 @@
+# 2.5
+
++ added Array.pushAll(collection) and Object.setAll(collection), return self
 
 # 2.4
 
