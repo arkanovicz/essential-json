@@ -581,6 +581,17 @@ public interface Json extends Serializable, Cloneable
 
         /**
          * Setter returning self (old value is lost)
+         * @param elems elements to add to set
+         * @return the array
+         */
+        public Json.Array pushAll(Collection<? extends Serializable> elems)
+        {
+            addAll(elems);
+            return this;
+        }
+
+        /**
+         * Setter returning self (old value is lost)
          * @param index index of new element
          * @param elem element to set
          * @return the array
@@ -999,6 +1010,18 @@ public interface Json extends Serializable, Cloneable
             put(key, elem);
             return this;
         }
+
+        /**
+         * Setter returning self
+         * @param elems elements to add
+         * @return the object
+         */
+        public Json.Object setAll(Map<? extends String, ? extends Serializable> elems)
+        {
+            putAll(elems);
+            return this;
+        }
+
 
         public java.lang.Object clone()
         {
