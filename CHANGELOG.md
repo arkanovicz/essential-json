@@ -1,3 +1,7 @@
+# 2.6
+
++ added Json.toJson(java.lang.Object) method, which converts Java standard containers to Json
+
 # 2.5
 
 + added Array.pushAll(collection) and Object.setAll(collection), return self

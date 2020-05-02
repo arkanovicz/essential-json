@@ -237,6 +237,48 @@ public interface Json extends Serializable, Cloneable
      */
     java.lang.Object clone();
 
+    /**
+     * Tries to convert standard Java containers/objects to a Json container
+     * @param obj object to convert
+     * @return converted object
+     * @throws ClassCastException if input is not convertible to json
+     */
+    static Json toJson(java.lang.Object obj)
+    {
+        return (Json) toSerializable(obj);
+    }
+
+    /**
+     * Tries to convert standard Java containers/objects to a Json value
+     * @param obj object to convert
+     * @return converted object
+     * @throws ClassCastException if input is not convertible to json
+     */
+    static Serializable toSerializable(java.lang.Object obj)
+    {
+        if (obj instanceof Map)
+        {
+            Json.Object ret = new Json.Object();
+            Map map = (Map)obj;
+            for (Map.Entry entry : (Set<Map.Entry>)map.entrySet())
+            {
+                ret.put((String)entry.getKey(), toSerializable(entry.getValue()));
+            }
+            return ret;
+        }
+        else if (obj instanceof Collection)
+        {
+            Json.Array ret = new Json.Array();
+            for (java.lang.Object elem : (Collection)obj)
+            {
+                ret.add(toSerializable(elem));
+            }
+            return ret;
+        }
+        else return (Serializable)obj;
+    }
+
+
 /*****************************************************************
  *
  * Json.Array
