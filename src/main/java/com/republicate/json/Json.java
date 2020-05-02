@@ -1031,13 +1031,13 @@ public interface Json extends Serializable, Cloneable
 
         /**
          * Returns the element under the specified key as a Json container.
-         * @param  index index of the element to return
+         * @param  key key of the element to return
          * @return the element at the specified position as a Json.Object value
          * @throws ClassCastException if value is not a a Json container.
          */
-        public Json getJson(int index)
+        public Json getJson(String key)
         {
-            Serializable value = get(index);
+            Serializable value = get(key);
             return (Json)value;
         }
 
