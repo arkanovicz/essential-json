@@ -71,16 +71,18 @@ Containers `toString()` and `toString(Writer)` methods will render JSON strings 
 
 ## Building json
 
-`Json.Array` and `Json.Object` constructors can respectively be given an existing Iterable or an existing Map ; both can also be given a JSON string.
+`Json.Array` and `Json.Object` constructors (or equivalents `Json.newArray()` and `Json.newObject()` helper methods) can respectively be given an existing Iterable or an existing Map ; both can also be given a JSON string.
+
+Both containers have specialized getters (`getString`, `getBoolean`, etc.).
+
+`Json.Array` has helper methods `push`, `pushAll` and `put` that return self (and rely on the standard `add`, `addAll` and `set` ArrayList methods).
+
+`Json.Object` has helper methods `set` and `setAll` that return self (and rely on the standard `put` and `putAll` Map methods). 
 
     import com.republicate.json.Json;
     ...
-    Json.Array arr = new Json.Array("[1,2,3]");
-    arr.add(4);
-    arr.add(5);
-    Json.Object obj = new Json.Object(some_existing_map);
-    obj.put("foo", "bar");
-    obj.put("baz", arr);    
+    Json.Array arr = Json.newArray("[1,2,3]").add(4).add(5);
+    Json.Object obj = new Json.Object(some_existing_map).set("foo", "bar").set(("baz", arr);
 
 ### References
 

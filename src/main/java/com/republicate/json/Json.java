@@ -396,9 +396,11 @@ public interface Json extends Serializable, Cloneable
         @Override
         public Writer toPrettyString(Writer writer, String indent) throws IOException
         {
-            writer.write(indent);
             String nextIndent = indent + INDENTATION;
-            writer.write("[\n");
+            writer.write("[");
+            if (!isEmpty()) {
+                writer.write("\n" + nextIndent);
+            }
             boolean first = true;
             for (Serializable value : this)
             {
@@ -408,7 +410,7 @@ public interface Json extends Serializable, Cloneable
                 }
                 else
                 {
-                    writer.write(",\n");
+                    writer.write(",\n" + nextIndent);
                 }
                 if (value instanceof Json)
                 {
@@ -416,12 +418,11 @@ public interface Json extends Serializable, Cloneable
                 }
                 else
                 {
-                    writer.write(nextIndent);
                     Serializer.writeSerializable(value, writer);
                 }
             }
             if (!first) writer.write('\n');
-            writer.write(indent);
+            if (!isEmpty()) writer.write(indent);
             writer.write(']');
             return writer;
         }
@@ -788,7 +789,8 @@ public interface Json extends Serializable, Cloneable
         @Override
         public Writer toPrettyString(Writer writer, String indent) throws IOException
         {
-            writer.write("{\n");
+            writer.write("{");
+            if (!isEmpty()) writer.write("\n");
             String nextIndent = indent + INDENTATION;
             boolean first = true;
             for (Map.Entry<String, Serializable> entry : entrySet())
@@ -812,12 +814,11 @@ public interface Json extends Serializable, Cloneable
                 }
                 else
                 {
-                    writer.write(nextIndent);
                     Serializer.writeSerializable(value, writer);
                 }
             }
-            writer.write('\n');
-            writer.write(indent);
+            if (!first) writer.write('\n');
+            if (!isEmpty()) writer.write(indent);
             writer.write('}');
             return writer;
         }
