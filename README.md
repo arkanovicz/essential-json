@@ -1,5 +1,16 @@
 # Essential JSON
 
+- [Essential JSON](#essential-json)
+  * [Rationale](#rationale)
+  * [Description](#description)
+  * [Usage](#usage)
+    + [Inclusion in your project](#inclusion-in-your-project)
+    + [Parsing JSON](#parsing-json)
+    + [Rendering JSON](#rendering-json)
+    + [Building JSON](#building-json)
+    + [Converting to JSON](#converting-to-json)
+  * [References](#references)
+
 ## Rationale
 
 Although there are already tons of existing [Java JSON libraries](https://gitlab.renegat.net/claude/yajb), I needed one which would:
