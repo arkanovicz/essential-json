@@ -21,7 +21,6 @@ package com.republicate.json;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -576,6 +575,16 @@ public interface Json extends Serializable, Cloneable
         }
 
         /**
+         * Returns the element at the specified position as a byte array value.
+         * @param  index index of the element to return
+         * @return the element at the specified position as a byte array value
+         */
+        public byte[] getBytes(int index)
+        {
+            return TypeUtils.toBytes(get(index));
+        }
+
+        /**
          * Returns the element at the specified position as a Json.Array value. 
          * @param  index index of the element to return
          * @return the element at the specified position as a Json.Array value
@@ -1007,6 +1016,16 @@ public interface Json extends Serializable, Cloneable
         }
 
         /**
+         * Returns the element under the specified key as a byte array value.
+         * @param  key key of the element to return
+         * @return the element under the specified key as a byte array value or null if the key doesn't exist
+         */
+        public byte[] getBytes(String key)
+        {
+            return TypeUtils.toBytes(get(key));
+        }
+
+        /**
          * Returns the element under the specified key as a Json.Array value. 
          * @param  key key of the element to return
          * @return the element under the specified key as a Json.Array value or null if the key doesn't exist
@@ -1184,7 +1203,7 @@ public interface Json extends Serializable, Cloneable
                 String number = ((Number)serializable).toString();
                 if (number.equals("-Infinity") || number.equals("Infinity") || number.equals("NaN"))
                 {
-                    throw new IOException("invalid number: " + number);
+                    throw new ParseException("invalid number: " + number);
                 }
                 writer.write(serializable.toString());
             }
@@ -1309,7 +1328,7 @@ public interface Json extends Serializable, Cloneable
         {
             msg = "JSON parsing error at line " + row + ", column "  + col + ": " + msg;
             logger.error(msg);
-            return new IOException(msg);
+            return new ParseException(msg);
         }
 
         private String display(int c)
@@ -1440,11 +1459,11 @@ public interface Json extends Serializable, Cloneable
                 {
                     if (ch == -1)
                     {
-                        throw new IOException("encountered end of stream while parsing keyword '" + keyword + "'");
+                        throw new ParseException("encountered end of stream while parsing keyword '" + keyword + "'");
                     }
                     else
                     {
-                        throw new IOException("invalid character '" + display(ch) + "' while parsing keyword '" + keyword + "'");
+                        throw new ParseException("invalid character '" + display(ch) + "' while parsing keyword '" + keyword + "'");
                     }
                 }
             }
@@ -1739,7 +1758,7 @@ public interface Json extends Serializable, Cloneable
         @Override
         public int read(char[] cbuf, int off, int len) throws IOException
         {
-            throw new NotImplementedException();
+            throw new RuntimeException("not implemented");
         }
 
         @Override
@@ -2047,7 +2066,32 @@ public interface Json extends Serializable, Cloneable
             {
                 return (byte[])value;
             }
+            if (value instanceof BigInteger)
+            {
+                return ((BigInteger)value).toByteArray();
+            }
             return String.valueOf(value).getBytes(StandardCharsets.UTF_8);
         }
+    }
+
+    static class ParseException extends IOException
+    {
+        static final long serialVersionUID = 3841375828149090185L;
+
+        public ParseException() {
+        }
+
+        public ParseException(String message) {
+            super(message);
+        }
+
+        public ParseException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public ParseException(Throwable cause) {
+            super(cause);
+        }
+
     }
 }

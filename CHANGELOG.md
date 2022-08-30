@@ -1,8 +1,25 @@
+# 2.7
+
++ Added `getBytes()` method.
+
+# 2.6.4
+
+Maintenance release.
+
++ parsing errors now throw Json.ParseException
++ upgraded JUint, slf4j, and several maven plugins
+
+# 2.6.3
+
+Maintenance release.
+
++ upgraded JUnit
+
 # 2.6.2
 
 Maintenance release.
 
-+ fix `toPrettyString` methods formatting
++ fixed `toPrettyString` methods formatting
 
 # 2.6.1
 
